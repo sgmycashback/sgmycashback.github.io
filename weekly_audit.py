@@ -25,11 +25,13 @@ FX_API_URL = "https://open.er-api.com/v6/latest/SGD"
 
 def fetch_sgd_myr_rate():
     try:
-        req = urllib.request.Request(FX_API_URL, headers={"User-Agent": "SGMYCashbackBot/1.0"})
+        req = urllib.request.Request(FX_API_URL, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+            if data.get("result") != "success":
+                return None
             rate = data.get("rates", {}).get("MYR")
-            if isinstance(rate, (int, float)) and 2.0 < rate < 5.0:
+            if isinstance(rate, (int, float))  and not isinstance(rate, bool) and 2.0 < rate < 5.0:
                 return round(float(rate), 2)
     except Exception as exc:
         print(f"[WARN] FX fetch failed: {exc}")
@@ -49,9 +51,9 @@ def check_url(url):
             with urllib.request.urlopen(req, timeout=15) as resp:
                 return resp.status, "OK"
         except urllib.error.HTTPError as err:
-            if err.code in (403, 405, 429):
+            if err.code in (403, 429):
                 return err.code, "BOT_SHIELD_OK"
-            if method == "HEAD" and err.code == 404:
+            if method == "HEAD" and err.code in (400, 404, 405, 501):
                 continue
             return err.code, f"HTTP_{err.code}"
         except Exception as exc:
@@ -83,6 +85,9 @@ def extract_urls(html_text):
 
 
 def update_files(new_rate):
+    if new_rate is None:
+            print("[WARN] FX rate unavailable; skipping index.html and sitemap.xml updates.")
+            return
     if os.path.exists(INDEX_FILE):
         with open(INDEX_FILE, "r", encoding="utf-8") as f:
             html = f.read()
@@ -138,7 +143,7 @@ def send_telegram(message):
     api_url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = urllib.parse.urlencode({
         "chat_id": chat_id,
-        "text": message,
+        "text": message[:4000],
         "disable_web_page_preview": "true",
     }).encode("utf-8")
     try:
@@ -146,7 +151,7 @@ def send_telegram(message):
         with urllib.request.urlopen(req, timeout=15) as resp:
             print(f"[INFO] Telegram sent: HTTP {resp.status}")
     except Exception as exc:
-        print(f"[WARN] Telegram send failed: {exc}")
+        print(f"[WARN] Telegram send failed: {type(exc).__name__}: {str(exc).replace(token, '[REDACTED]')}")
 
 
 def main():
@@ -165,7 +170,7 @@ def main():
         if status in ("OK", "BOT_SHIELD_OK"):
             ok_count += 1
         else:
-            broken.append(f"- [{code}] {u}")
+            broken.append(f"- [{code}] {u} ({status})")
 
     rate_str = f"1 SGD = {rate:.2f} MYR" if rate else "Fetch failed (kept existing)"
     summary_lines = [
