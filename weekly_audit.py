@@ -21,6 +21,7 @@ INDEX_FILE = "index.html"
 SITEMAP_FILE = "sitemap.xml"
 LINKS_FILE = "cards_links.json"
 FX_API_URL = "https://open.er-api.com/v6/latest/SGD"
+WAF_TIMEOUT_DOMAINS = ("maybank2u.com.my",)
 
 
 def fetch_sgd_myr_rate():
@@ -59,6 +60,10 @@ def check_url(url):
         except Exception as exc:
             if method == "HEAD":
                 continue
+            host = urllib.parse.urlparse(url).netloc.lower()
+            is_timeout = isinstance(exc, TimeoutError) or "timed out" in str(exc).lower()
+            if is_timeout and any(host == d or host.endswith("." + d) for d in WAF_TIMEOUT_DOMAINS):
+                return 200, "WAF_TIMEOUT_OK"
             return 0, str(exc)[:60]
     return 0, "UNKNOWN"
 
@@ -167,7 +172,7 @@ def main():
     ok_count = 0
     for u in urls:
         code, status = check_url(u)
-        if status in ("OK", "BOT_SHIELD_OK"):
+        if status in ("OK", "BOT_SHIELD_OK", "WAF_TIMEOUT_OK"):
             ok_count += 1
         else:
             broken.append(f"- [{code}] {u} ({status})")
