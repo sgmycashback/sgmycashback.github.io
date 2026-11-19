@@ -1,0 +1,39 @@
+name: Weekly Cashback Site Audit
+
+on:
+  schedule:
+    - cron: '0 1 * * 1' # Every Monday 09:00 MYT (01:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run weekly audit & FX update
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python weekly_audit.py
+
+      - name: Commit updated rate and date
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html sitemap.xml
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: weekly FX rate & SEO date update"
+            git push
+          else
+            echo "No changes to commit."
+          fi
