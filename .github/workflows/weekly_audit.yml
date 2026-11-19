@@ -30,9 +30,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html sitemap.xml
+          for f in index.html sitemap.xml; do [ -f "$f" ] && git add "$f"; done
           if ! git diff --staged --quiet; then
             git commit -m "chore: weekly FX rate & SEO date update"
+            git pull --rebase
             git push
           else
             echo "No changes to commit."
