@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新马信用卡真实返现计算器 | Kalkulator Pulangan Tunai Kad Kredit MY &amp; SG | SG/MY Cashback Calculator</title>
+  <meta name="description" content="2026 新加坡与马来西亚信用卡真实净返现计算器：支持中/马/英三语切换、马来西亚伊斯兰卡（Kad Islamik）筛选、新马跨境双币汇率与外币手续费真实对比。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    input[type="range"] { accent-color: #0f766e; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+  <!-- Top Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-teal-700 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+          SG·MY
+        </div>
+        <div>
+          <h1 id="app-title" class="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+            新马信用卡真实返现计算器
+          </h1>
+          <p id="app-subtitle" class="text-xs text-slate-500">
+            扣除最低消费门槛与每月封顶，算清真实净到手返现
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="inline-flex rounded-lg bg-slate-100 p-1 text-xs font-medium" role="group" aria-label="Language">
+          <button type="button" data-lang="zh" class="lang-btn px-2.5 py-1 rounded-md transition">中文</button>
+          <button type="button" data-lang="ms" class="lang-btn px-2.5 py-1 rounded-md transition">BM</button>
+          <button type="button" data-lang="en" class="lang-btn px-2.5 py-1 rounded-md transition">EN</button>
+        </div>
+        <button id="open-aff-modal" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
+          <span id="aff-btn-label">推广链接设置</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
+    <!-- Mode Tabs -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-2 shadow-sm flex flex-wrap gap-2">
+      <button type="button" data-mode="sg" class="mode-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+        <span>🇸🇬</span>
+        <span id="tab-sg">新加坡 (SGD)</span>
+      </button>
+      <button type="button" data-mode="my" class="mode-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+        <span>🇲🇾</span>
+        <span id="tab-my">马来西亚 (MYR)</span>
+      </button>
+      <button type="button" data-mode="cross" class="mode-btn flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+        <span>💱</span>
+        <span id="tab-cross">新马跨境双币对比</span>
+      </button>
+    </section>
+
+    <!-- Calculator Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Left: Inputs -->
+      <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="input-heading" class="text-base font-bold text-slate-900">每月消费预算</h2>
+          <button id="reset-btn" type="button" class="text-xs font-medium text-teal-700 hover:text-teal-800 underline">
+            重置预设
+          </button>
+        </div>
+
+        <!-- Local Spend Inputs (SG & MY) -->
+        <div id="local-inputs" class="space-y-4">
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="spend-dining" id="lbl-dining" class="font-medium text-slate-700">餐饮 / 外卖</label>
+              <span id="val-dining" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="spend-dining" type="range" min="0" max="3000" step="50" value="400" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="spend-groceries" id="lbl-groceries" class="font-medium text-slate-700">超市买菜</label>
+              <span id="val-groceries" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="spend-groceries" type="range" min="0" max="3000" step="50" value="350" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="spend-petrol" id="lbl-petrol" class="font-medium text-slate-700">打油 / 交通</label>
+              <span id="val-petrol" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="spend-petrol" type="range" min="0" max="2000" step="50" value="200" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="spend-online" id="lbl-online" class="font-medium text-slate-700">网购 / 电子钱包 / 手机免触</label>
+              <span id="val-online" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="spend-online" type="range" min="0" max="3000" step="50" value="300" class="w-full" />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="spend-other" id="lbl-other" class="font-medium text-slate-700">其他日常消费</label>
+              <span id="val-other" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="spend-other" type="range" min="0" max="3000" step="50" value="150" class="w-full" />
+          </div>
+
+          <!-- Islamic Card Filter (Visible in MY mode) -->
+          <div id="islamic-filter-wrap" class="hidden pt-2 border-t border-slate-100">
+            <label class="flex items-center justify-between cursor-pointer gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+              <div>
+                <div id="lbl-islamic-title" class="text-sm font-semibold text-emerald-900">仅显示伊斯兰符合教义卡 (Kad Islamik)</div>
+                <div id="lbl-islamic-desc" class="text-xs text-emerald-700">筛选 Shariah 合规免复利信用卡</div>
+              </div>
+              <input id="islamic-only" type="checkbox" class="w-5 h-5 rounded text-emerald-700 focus:ring-emerald-600" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Cross-border Inputs (Visible in Cross mode) -->
+        <div id="cross-inputs" class="hidden space-y-4">
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-sm">
+              <label for="cross-myr" id="lbl-cross-myr" class="font-medium text-slate-700">每月在马来西亚消费 (MYR)</label>
+              <span id="val-cross-myr" class="font-bold text-slate-900 tabular-nums"></span>
+            </div>
+            <input id="cross-myr" type="range" min="200" max="10000" step="100" value="2000" class="w-full" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="fx-rate" id="lbl-fx-rate" class="block text-xs font-medium text-slate-600 mb-1">实时参考汇率 (1 SGD = MYR)</label>
+              <input id="fx-rate" type="number" step="0.01" min="2.0" max="5.0" value="3.19" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold" />
+            </div>
+            <div>
+              <label for="bank-fx-fee" id="lbl-fx-fee" class="block text-xs font-medium text-slate-600 mb-1">普通新卡外币手续费 (%)</label>
+              <input id="bank-fx-fee" type="number" step="0.05" min="0" max="5.0" value="3.25" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold" />
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed" id="cross-note">
+            说明：多数新加坡银行卡在海外刷马币会收约 3.25% 外币手续费，直接吃光 1.5%~2% 返现；而 UOB EVOL (SG) 免外币手续费且享 1% 海外返现，实际净成本更低。
+          </div>
+        </div>
+
+        <!-- Total Summary Pill -->
+        <div class="p-3.5 rounded-xl bg-slate-900 text-white flex items-center justify-between">
+          <span id="lbl-total-spend" class="text-xs font-medium text-slate-300">每月总消费</span>
+          <span id="total-spend-val" class="text-lg font-extrabold tabular-nums">S$1,400</span>
+        </div>
+      </section>
+
+      <!-- Right: Results + Chart -->
+      <section class="lg:col-span-7 space-y-5">
+        <!-- Best Card Banner -->
+        <div id="winner-banner" class="bg-gradient-to-r from-teal-700 to-emerald-700 text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div id="winner-kicker" class="text-xs font-semibold uppercase tracking-wider text-teal-100">当前预算最高净返现</div>
+            <div id="winner-name" class="text-xl font-extrabold">-</div>
+            <div id="winner-sub" class="text-xs text-teal-100">-</div>
+          </div>
+          <div class="text-left sm:text-right shrink-0">
+            <div id="winner-cashback" class="text-2xl font-extrabold tabular-nums">-</div>
+            <div id="winner-yearly" class="text-xs text-teal-100 tabular-nums">-</div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <h3 id="chart-title" class="text-sm font-bold text-slate-800 mb-3">每月真实净返现对比</h3>
+          <div class="relative h-72">
+            <canvas id="cashback-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Cards List -->
+        <div id="cards-list" class="space-y-3"></div>
+      </section>
+    </div>
+
+    <!-- SEO & Methodology Footer Note -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-5 text-xs text-slate-600 space-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="font-bold text-slate-800" id="seo-heading">数据口径与自动巡检说明</span>
+        <span id="last-updated-badge" class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">数据基准：2026-11-18</span>
+      </div>
+      <p id="seo-body" class="leading-relaxed">
+        本计算器严格按各银行最新公布规则计算：先核对是否达到每月最低消费门槛（未达标按基础返现率计算），再扣除单项封顶与月度总封顶。跨境模式默认参考 1 SGD = 3.19 MYR 与常见 3.25% 外币手续费，实际入账汇率以发卡机构结算日为准。
+      </p>
+    </section>
+  </main>
+
+  <!-- Affiliate Link Manager Modal -->
+  <div id="aff-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 id="modal-title" class="text-base font-bold text-slate-900">Involve Asia 推广链接设置</h3>
+          <p id="modal-desc" class="text-xs text-slate-500">粘贴你的专属追踪链接（如 invl.me/...），自动保存在本地浏览器，也可导出 JSON 同步至 GitHub。</p>
+        </div>
+        <button id="close-aff-modal" type="button" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+      </div>
+      <div id="aff-fields" class="p-5 overflow-y-auto space-y-3 flex-1"></div>
+      <div class="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+        <button id="export-links-btn" type="button" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700">
+          导出 cards_links.json
+        </button>
+        <div class="flex items-center gap-2">
+          <span id="save-toast" class="text-xs font-semibold text-emerald-700 hidden">已保存</span>
+          <button id="save-aff-btn" type="button" class="px-4 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold">
+            保存并应用
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'sgmy_cashback_aff_links_v1';
+
+    const CARDS = [
+      // Singapore Cards (2026 verified rules)
+      {
+        id: 'ocbc-365',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'OCBC',
+        name: 'OCBC 365 Credit Card',
+        islamic: false,
+        minSpend: 800,
+        monthlyCap: 160,
+        baseRate: 0.0025,
+        rates: { dining: 0.06, groceries: 0.06, petrol: 0.06, online: 0.0025, other: 0.0025 },
+        fxFee: 0.0325,
+        overseasRate: 0.003,
+        defaultUrl: 'https://www.ocbc.com/personal-banking/cards/365-cashback-credit-card',
+        tags: {
+          zh: ['2026-11 新规 6%', '月封顶 S$160', '需月消 S$800'],
+          ms: ['Baharu Nov 2026: 6%', 'Had S$160/bln', 'Min S$800'],
+          en: ['Nov 2026 Update: 6%', 'Cap S$160/mo', 'Min S$800']
+        }
+      },
+      {
+        id: 'uob-evol-sg',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'UOB SG',
+        name: 'UOB EVOL Card (SG)',
+        islamic: false,
+        minSpend: 800,
+        monthlyCap: 80,
+        baseRate: 0.003,
+        rates: { dining: 0.003, groceries: 0.003, petrol: 0.003, online: 0.10, other: 0.003 },
+        catCaps: { online: 30 },
+        fxFee: 0.0,
+        overseasRate: 0.01,
+        defaultUrl: 'https://www.uob.com.sg/personal/cards/cashback/evol-card/index.page',
+        tags: {
+          zh: ['0% 外币手续费', '海外 1% 返现', '网购/免触 10%'],
+          ms: ['0% Yuran FX', '1% Luar Negara', '10% Dalam Talian'],
+          en: ['0% FX Fee', '1% Overseas', '10% Online/Contactless']
+        }
+      },
+      {
+        id: 'citi-cb-sg',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'Citibank SG',
+        name: 'Citi Cash Back Card',
+        islamic: false,
+        minSpend: 800,
+        monthlyCap: 80,
+        baseRate: 0.002,
+        rates: { dining: 0.06, groceries: 0.06, petrol: 0.08, online: 0.002, other: 0.002 },
+        fxFee: 0.0325,
+        overseasRate: 0.002,
+        defaultUrl: 'https://www.citibank.com.sg/credit-cards/cashback/cash-back-card',
+        tags: {
+          zh: ['打油/打车 8%', '餐饮/买菜 6%', '月封顶 S$80'],
+          ms: ['Petrol/Grab 8%', 'Makan/Runcit 6%', 'Had S$80/bln'],
+          en: ['8% Petrol/Commute', '6% Dining/Groceries', 'Cap S$80/mo']
+        }
+      },
+      {
+        id: 'uob-abs-sg',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'UOB SG',
+        name: 'UOB Absolute Cashback (Amex)',
+        islamic: false,
+        minSpend: 0,
+        monthlyCap: Infinity,
+        baseRate: 0.017,
+        rates: { dining: 0.017, groceries: 0.017, petrol: 0.017, online: 0.017, other: 0.017 },
+        fxFee: 0.0325,
+        overseasRate: 0.017,
+        defaultUrl: 'https://www.uob.com.sg/personal/cards/cashback/absolute-cashback-card.page',
+        tags: {
+          zh: ['1.7% 无上限', '0 门槛', 'Amex 卡'],
+          ms: ['1.7% Tanpa Had', 'Tiada Minima', 'Amex'],
+          en: ['1.7% Unlimited', 'No Min Spend', 'Amex']
+        }
+      },
+      {
+        id: 'citi-cbp-sg',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'Citibank SG',
+        name: 'Citi Cash Back+ Card',
+        islamic: false,
+        minSpend: 0,
+        monthlyCap: Infinity,
+        baseRate: 0.016,
+        rates: { dining: 0.016, groceries: 0.016, petrol: 0.016, online: 0.016, other: 0.016 },
+        fxFee: 0.0325,
+        overseasRate: 0.016,
+        defaultUrl: 'https://www.citibank.com.sg/credit-cards/cashback/cashback-plus-card/index.html',
+        tags: {
+          zh: ['1.6% 无上限', '0 门槛', 'Mastercard 通用'],
+          ms: ['1.6% Tanpa Had', 'Tiada Minima', 'Mastercard'],
+          en: ['1.6% Unlimited', 'No Min Spend', 'Mastercard']
+        }
+      },
+      {
+        id: 'cimb-wmc-sg',
+        region: 'sg',
+        currency: 'SGD',
+        bank: 'CIMB SG',
+        name: 'CIMB World Mastercard',
+        islamic: false,
+        minSpend: 0,
+        monthlyCap: Infinity,
+        baseRate: 0.01,
+        rates: { dining: 0.02, groceries: 0.01, petrol: 0.01, online: 0.02, other: 0.01 },
+        fxFee: 0.03,
+        overseasRate: 0.01,
+        defaultUrl: 'https://www.cimb.com.sg/en/personal/banking-with-us/cards/credit-cards/cimb-world-mastercard.html',
+        tags: {
+          zh: ['餐饮/外卖 2%', '终身免年费', '无封顶'],
+          ms: ['Makan/Online 2%', 'Tanpa Yuran Tahunan', 'Tiada Had'],
+          en: ['2% Dining/Online', 'No Annual Fee', 'Uncapped']
+        }
+      },
+
+      // Malaysia Cards (2026 verified rules, incl. Islamic cards)
+      {
+        id: 'uob-one-my',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'UOB MY',
+        name: 'UOB ONE Platinum Card',
+        islamic: false,
+        minSpend: 1500,
+        monthlyCap: 60,
+        baseRate: 0.002,
+        rates: { dining: 0.10, groceries: 0.10, petrol: 0.10, online: 0.002, other: 0.002 },
+        catCaps: { dining: 15, groceries: 15, petrol: 15 },
+        defaultUrl: 'https://www.uob.com.my/personal/cards/credit-cards/uob-one-card.page',
+        tags: {
+          zh: ['餐饮/买菜/打油 10%', '每类封顶 RM15', '需月消 RM1,500'],
+          ms: ['Makan/Runcit/Petrol 10%', 'Had RM15/kat', 'Min RM1,500'],
+          en: ['10% Dining/Groceries/Petrol', 'RM15/cat cap', 'Min RM1,500']
+        }
+      },
+      {
+        id: 'hsbc-mpower-i',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'HSBC Amanah',
+        name: 'HSBC Amanah MPower Platinum-i',
+        islamic: true,
+        minSpend: 2000,
+        monthlyCap: 45,
+        baseRate: 0.002,
+        rates: { dining: 0.002, groceries: 0.08, petrol: 0.08, online: 0.08, other: 0.002 },
+        catCaps: { groceries: 15, petrol: 15, online: 15 },
+        defaultUrl: 'https://www.hsbcamanah.com.my/credit-cards/products/mpower-platinum-i/',
+        tags: {
+          zh: ['伊斯兰卡', '电子钱包/买菜/打油 8%', '月封顶 RM45'],
+          ms: ['Kad Islamik', 'eWallet/Runcit/Petrol 8%', 'Had RM45/bln'],
+          en: ['Islamic Card', '8% eWallet/Grocery/Petrol', 'Cap RM45/mo']
+        }
+      },
+      {
+        id: 'maybank-petronas-i',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'Maybank Islamic',
+        name: 'Maybank Islamic PETRONAS Ikhwan-i',
+        islamic: true,
+        minSpend: 0,
+        monthlyCap: 50,
+        baseRate: 0.002,
+        rates: { dining: 0.002, groceries: 0.002, petrol: 0.08, online: 0.002, other: 0.002 },
+        catCaps: { petrol: 50 },
+        defaultUrl: 'https://www.maybank2u.com.my/maybank2u/malaysia/en/personal/cards/islamic_cards_listing.page',
+        tags: {
+          zh: ['伊斯兰卡', '周末 Petronas 8%', '终身免年费'],
+          ms: ['Kad Islamik', 'Petronas Hujung Minggu 8%', 'Percuma Seumur Hidup'],
+          en: ['Islamic Card', '8% Weekend Petronas', 'No Annual Fee']
+        }
+      },
+      {
+        id: 'maybank-ikhwan-mc-i',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'Maybank Islamic',
+        name: 'Maybank Islamic Ikhwan Mastercard-i',
+        islamic: true,
+        minSpend: 0,
+        monthlyCap: 50,
+        baseRate: 0.002,
+        rates: { dining: 0.002, groceries: 0.05, petrol: 0.05, online: 0.002, other: 0.002 },
+        defaultUrl: 'https://www.maybank2u.com.my/maybank2u/malaysia/en/personal/cards/islamic_mastercard_ikhwan_gold_card.page',
+        tags: {
+          zh: ['伊斯兰卡', '周五六买菜/打油 5%', '终身免年费'],
+          ms: ['Kad Islamik', 'Jumaat-Sabtu 5% Petrol/Runcit', 'Percuma Seumur Hidup'],
+          en: ['Islamic Card', '5% Fri-Sat Petrol/Grocery', 'No Annual Fee']
+        }
+      },
+      {
+        id: 'rhb-shell-i',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'RHB Islamic',
+        name: 'RHB Shell Visa Credit Card-i',
+        islamic: true,
+        minSpend: 3000,
+        monthlyCap: 60,
+        baseRate: 0.002,
+        rates: { dining: 0.002, groceries: 0.05, petrol: 0.12, online: 0.05, other: 0.002 },
+        catCaps: { petrol: 30, groceries: 15, online: 15 },
+        defaultUrl: 'https://ringgitplus.com/en/credit-card/islamic/',
+        tags: {
+          zh: ['伊斯兰卡', 'Shell 打油高达 12%', '买菜/网购 5%'],
+          ms: ['Kad Islamik', 'Shell sehingga 12%', 'Runcit/Online 5%'],
+          en: ['Islamic Card', 'Up to 12% Shell', '5% Grocery/Online']
+        }
+      },
+      {
+        id: 'uob-evol-my',
+        region: 'my',
+        currency: 'MYR',
+        bank: 'UOB MY',
+        name: 'UOB EVOL Card (MY)',
+        islamic: false,
+        minSpend: 1000,
+        monthlyCap: 30,
+        baseRate: 0.002,
+        rates: { dining: 0.002, groceries: 0.002, petrol: 0.002, online: 0.10, other: 0.002 },
+        catCaps: { online: 30 },
+        defaultUrl: 'https://www.uob.com.my/personal/cards/credit-cards/uob-evol-card.page',
+        tags: {
+          zh: ['网购 10% + 电子钱包 5%', '月封顶 RM30', '需月消 RM1,000'],
+          ms: ['Online 10% + eWallet 5%', 'Had RM30/bln', 'Min RM1,000'],
+          en: ['10% Online / 5% eWallet', 'Cap RM30/mo', 'Min RM1,000']
+        }
+      }
+    ];
+
+    const I18N = {
+      zh: {
+        title: '新马信用卡真实返现计算器',
+        subtitle: '扣除最低消费门槛与每月封顶，算清真实净到手返现',
+        affBtn: '推广链接设置',
+        tabSg: '新加坡 (SGD)',
+        tabMy: '马来西亚 (MYR)',
+        tabCross: '新马跨境双币对比',
+        inputHeading: '每月消费预算',
+        reset: '重置预设',
+        dining: '餐饮 / 外卖',
+        groceries: '超市买菜',
+        petrol: '打油 / 交通',
+        online: '网购 / 电子钱包 / 手机免触',
+        other: '其他日常消费',
+        islamicTitle: '仅显示伊斯兰符合教义卡 (Kad Islamik)',
+        islamicDesc: '筛选 Shariah 合规免复利信用卡',
+        crossMyr: '每月在马来西亚消费 (MYR)',
+        fxRate: '实时参考汇率 (1 SGD = MYR)',
+        fxFee: '普通新卡外币手续费 (%)',
+        crossNote: '说明：多数新加坡银行卡在海外刷马币会收约 3.25% 外币手续费，直接吃光 1.5%~2% 返现；而 UOB EVOL (SG) 免外币手续费且享 1% 海外返现，实际净成本更低。',
+        totalSpend: '每月总消费',
+        winnerKicker: '当前预算最高净收益',
+        chartTitle: '每月真实净返现对比',
+        seoHeading: '数据口径与自动巡检说明',
+        seoBody: '本计算器严格按各银行最新公布规则计算：先核对是否达到每月最低消费门槛（未达标按基础返现率计算），再扣除单项封顶与月度总封顶。跨境模式默认参考 1 SGD = 3.19 MYR 与常见 3.25% 外币手续费，实际入账汇率以发卡机构结算日为准。',
+        modalTitle: 'Involve Asia 推广链接设置',
+        modalDesc: '粘贴你的专属追踪链接（如 invl.me/...），自动保存在本地浏览器，也可导出 JSON 同步至 GitHub。',
+        exportBtn: '导出 cards_links.json',
+        saveBtn: '保存并应用',
+        savedToast: '已保存',
+        belowMin: (need, cur) => `未达门槛，还差 ${cur}${need}`,
+        metMin: '已达标',
+        noMin: '0 门槛',
+        cappedNote: '已触发月度封顶',
+        effRate: '真实净返现率',
+        yearlyEst: (val, cur) => `预计年省 ${cur}${val}`,
+        applyBtn: '查看最新迎新礼 / 申请',
+        islamicBadge: '伊斯兰卡',
+        fxFeeLabel: '外币手续费',
+        netGainLabel: '净收益 / 净成本'
+      },
+      ms: {
+        title: 'Kalkulator Pulangan Tunai Kad Kredit MY & SG',
+        subtitle: 'Kira pulangan tunai bersih sebenar selepas had bulanan & perbelanjaan minima',
+        affBtn: 'Tetapan Pautan',
+        tabSg: 'Singapura (SGD)',
+        tabMy: 'Malaysia (MYR)',
+        tabCross: 'Perbandingan Rentas Sempadan',
+        inputHeading: 'Bajet Perbelanjaan Bulanan',
+        reset: 'Set Semula',
+        dining: 'Makan / Penghantaran',
+        groceries: 'Barangan Runcit',
+        petrol: 'Petrol / Pengangkutan',
+        online: 'Beli-belah Dalam Talian / eWallet',
+        other: 'Perbelanjaan Lain',
+        islamicTitle: 'Tapis Kad Islamik Sahaja',
+        islamicDesc: 'Patuh Syariah tanpa faedah berganda',
+        crossMyr: 'Perbelanjaan Bulanan di Malaysia (MYR)',
+        fxRate: 'Kadar Tukaran (1 SGD = MYR)',
+        fxFee: 'Yuran FX Kad SG Biasa (%)',
+        crossNote: 'Nota: Kebanyakan kad SG mengenakan ~3.25% yuran FX apabila digunakan di Malaysia, mengatasi pulangan 1.5%~2%. UOB EVOL (SG) menawarkan 0% yuran FX + 1% pulangan luar negara.',
+        totalSpend: 'Jumlah Perbelanjaan Bulanan',
+        winnerKicker: 'Pulangan Tunai Bersih Tertinggi',
+        chartTitle: 'Perbandingan Pulangan Tunai Bersih Bulanan',
+        seoHeading: 'Metodologi & Semakan Mingguan Automatik',
+        seoBody: 'Kalkulator ini menyemak syarat perbelanjaan minima bulanan terlebih dahulu (kadar asas digunakan jika tidak mencukupi) dan mengenakan had kategori serta had keseluruhan bulanan.',
+        modalTitle: 'Tetapan Pautan Involve Asia',
+        modalDesc: 'Tampal pautan penjejakan anda (cth. invl.me/...) untuk disimpan di pelayar atau eksport sebagai JSON.',
+        exportBtn: 'Eksport cards_links.json',
+        saveBtn: 'Simpan & Guna',
+        savedToast: 'Disimpan',
+        belowMin: (need, cur) => `Kurang ${cur}${need} untuk syarat minima`,
+        metMin: 'Syarat Dipenuhi',
+        noMin: 'Tiada Minima',
+        cappedNote: 'Had bulanan dicapai',
+        effRate: 'Kadar Bersih Sebenar',
+        yearlyEst: (val, cur) => `Anggaran jimat ${cur}${val}/thn`,
+        applyBtn: 'Mohon / Lihat Promosi',
+        islamicBadge: 'Kad Islamik',
+        fxFeeLabel: 'Yuran FX',
+        netGainLabel: 'Untung / Kos Bersih'
+      },
+      en: {
+        title: 'SG & MY Real Credit Card Cashback Calculator',
+        subtitle: 'Net take-home cashback after minimum spend thresholds & monthly caps',
+        affBtn: 'Affiliate Links',
+        tabSg: 'Singapore (SGD)',
+        tabMy: 'Malaysia (MYR)',
+        tabCross: 'SG-MY Cross-Border',
+        inputHeading: 'Monthly Spend Budget',
+        reset: 'Reset',
+        dining: 'Dining & Delivery',
+        groceries: 'Groceries',
+        petrol: 'Petrol & Commute',
+        online: 'Online / eWallet / Contactless',
+        other: 'Other Retail Spend',
+        islamicTitle: 'Islamic Cards Only (Kad Islamik)',
+        islamicDesc: 'Filter for Shariah-compliant credit cards',
+        crossMyr: 'Monthly Malaysia Spend (MYR)',
+        fxRate: 'Reference FX Rate (1 SGD = MYR)',
+        fxFee: 'Standard SG Card FX Fee (%)',
+        crossNote: 'Note: Most SG cards charge ~3.25% FX fee on MYR spend, wiping out 1.5%-2% rewards. UOB EVOL (SG) charges 0% FX fee plus 1% overseas cashback.',
+        totalSpend: 'Total Monthly Spend',
+        winnerKicker: 'Top Net Monthly Value',
+        chartTitle: 'Monthly Net Cashback Comparison',
+        seoHeading: 'Calculation Rules & Weekly Auto-Audit',
+        seoBody: 'Calculations strictly enforce minimum monthly spend rules (reverting to base earn rate if unmet) and apply both per-category and total monthly caps.',
+        modalTitle: 'Involve Asia Affiliate Links',
+        modalDesc: 'Paste your tracking links (e.g. invl.me/...) to save locally or export JSON for GitHub.',
+        exportBtn: 'Export cards_links.json',
+        saveBtn: 'Save & Apply',
+        savedToast: 'Saved',
+        belowMin: (need, cur) => `Need ${cur}${need} more for min spend`,
+        metMin: 'Min Met',
+        noMin: 'No Min Spend',
+        cappedNote: 'Monthly cap reached',
+        effRate: 'Effective Net Rate',
+        yearlyEst: (val, cur) => `Est. ${cur}${val}/yr`,
+        applyBtn: 'Apply / View Offer',
+        islamicBadge: 'Islamic',
+        fxFeeLabel: 'FX Fee',
+        netGainLabel: 'Net Gain / Cost'
+      }
+    };
+
+    const state = {
+      lang: 'zh',
+      mode: 'sg',
+      islamicOnly: false,
+      spend: { dining: 400, groceries: 350, petrol: 200, online: 300, other: 150 },
+      crossMyr: 2000,
+      fxRate: 3.19,
+      bankFxFee: 3.25,
+      affLinks: {}
+    };
+
+    let chartInstance = null;
+
+    function loadAffLinks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) state.affLinks = JSON.parse(raw) || {};
+      } catch (e) {
+        state.affLinks = {};
+      }
+    }
+
+    function saveAffLinks() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.affLinks));
+      } catch (e) {}
+    }
+
+    function fmtMoney(num, cur) {
+      const prefix = cur === 'SGD' ? 'S$' : 'RM';
+      const sign = num < 0 ? '-' : '';
+      return `${sign}${prefix}${Math.abs(num).toFixed(2)}`;
+    }
+
+    function fmtInt(num, cur) {
+      const prefix = cur === 'SGD' ? 'S$' : 'RM';
+      return `${prefix}${Math.round(num).toLocaleString()}`;
+    }
+
+    function calculateLocalCard(card, spend) {
+      const total = spend.dining + spend.groceries + spend.petrol + spend.online + spend.other;
+      const metMin = total >= card.minSpend;
+      let earned = 0;
+      let capped = false;
+
+      if (!metMin) {
+        earned = total * card.baseRate;
+      } else {
+        for (const cat of ['dining', 'groceries', 'petrol', 'online', 'other']) {
+          let catEarn = spend[cat] * (card.rates[cat] ?? card.baseRate);
+          if (card.catCaps && card.catCaps[cat] !== undefined && catEarn > card.catCaps[cat]) {
+            catEarn = card.catCaps[cat];
+            capped = true;
+          }
+          earned += catEarn;
+        }
+        if (earned > card.monthlyCap) {
+          earned = card.monthlyCap;
+          capped = true;
+        }
+      }
+
+      const effRate = total > 0 ? (earned / total) * 100 : 0;
+      return {
+        card,
+        total,
+        metMin,
+        needMore: Math.max(0, card.minSpend - total),
+        net: earned,
+        effRate,
+        capped
+      };
+    }
+
+    function calculateCrossCards() {
+      const myr = state.crossMyr;
+      const sgdBase = myr / (state.fxRate || 3.19);
+      const sgCards = CARDS.filter(c => c.region === 'sg').map(card => {
+        const fxPct = card.id === 'uob-evol-sg' ? 0 : (state.bankFxFee / 100);
+        const fxCost = sgdBase * fxPct;
+        const cashback = sgdBase * card.overseasRate;
+        const netSgd = cashback - fxCost;
+        const effPct = sgdBase > 0 ? (netSgd / sgdBase) * 100 : 0;
+        return {
+          card,
+          sgdBase,
+          fxPct: fxPct * 100,
+          fxCost,
+          cashback,
+          net: netSgd,
+          effRate: effPct,
+          metMin: true,
+          needMore: 0,
+          capped: false
+        };
+      });
+      return sgCards.sort((a, b) => b.net - a.net);
+    }
+
+    function renderChart(results, currency) {
+      const canvas = document.getElementById('cashback-chart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      const labels = results.map(r => r.card.name.replace(' Credit Card', '').replace(' Card', ''));
+      const data = results.map(r => Number(r.net.toFixed(2)));
+      const colors = data.map(v => v >= 0 ? 'rgba(15, 118, 110, 0.85)' : 'rgba(225, 29, 72, 0.8)');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      chartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: currency,
+            data,
+            backgroundColor: colors,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: v => (currency === 'SGD' ? 'S$' : 'RM') + v
+              }
+            },
+            x: {
+              ticks: {
+                font: { size: 11 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function render() {
+      const t = I18N[state.lang];
+      document.getElementById('app-title').textContent = t.title;
+      document.getElementById('app-subtitle').textContent = t.subtitle;
+      document.getElementById('aff-btn-label').textContent = t.affBtn;
+      document.getElementById('tab-sg').textContent = t.tabSg;
+      document.getElementById('tab-my').textContent = t.tabMy;
+      document.getElementById('tab-cross').textContent = t.tabCross;
+      document.getElementById('input-heading').textContent = t.inputHeading;
+      document.getElementById('reset-btn').textContent = t.reset;
+      document.getElementById('lbl-dining').textContent = t.dining;
+      document.getElementById('lbl-groceries').textContent = t.groceries;
+      document.getElementById('lbl-petrol').textContent = t.petrol;
+      document.getElementById('lbl-online').textContent = t.online;
+      document.getElementById('lbl-other').textContent = t.other;
+      document.getElementById('lbl-islamic-title').textContent = t.islamicTitle;
+      document.getElementById('lbl-islamic-desc').textContent = t.islamicDesc;
+      document.getElementById('lbl-cross-myr').textContent = t.crossMyr;
+      document.getElementById('lbl-fx-rate').textContent = t.fxRate;
+      document.getElementById('lbl-fx-fee').textContent = t.fxFee;
+      document.getElementById('cross-note').textContent = t.crossNote;
+      document.getElementById('lbl-total-spend').textContent = t.totalSpend;
+      document.getElementById('winner-kicker').textContent = t.winnerKicker;
+      document.getElementById('chart-title').textContent = t.chartTitle;
+      document.getElementById('seo-heading').textContent = t.seoHeading;
+      document.getElementById('seo-body').textContent = t.seoBody;
+      document.getElementById('modal-title').textContent = t.modalTitle;
+      document.getElementById('modal-desc').textContent = t.modalDesc;
+      document.getElementById('export-links-btn').textContent = t.exportBtn;
+      document.getElementById('save-aff-btn').textContent = t.saveBtn;
+      document.getElementById('save-toast').textContent = t.savedToast;
+
+      // Active lang buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        const active = btn.dataset.lang === state.lang;
+        btn.className = `lang-btn px-2.5 py-1 rounded-md transition ${active ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+      });
+
+      // Active mode buttons
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        const active = btn.dataset.mode === state.mode;
+        btn.className = `mode-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${active ? 'bg-teal-700 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`;
+      });
+
+      const isCross = state.mode === 'cross';
+      document.getElementById('local-inputs').classList.toggle('hidden', isCross);
+      document.getElementById('cross-inputs').classList.toggle('hidden', !isCross);
+      document.getElementById('islamic-filter-wrap').classList.toggle('hidden', state.mode !== 'my');
+
+      const cur = state.mode === 'my' ? 'MYR' : 'SGD';
+      let results = [];
+
+      if (isCross) {
+        document.getElementById('val-cross-myr').textContent = fmtInt(state.crossMyr, 'MYR');
+        const sgdEq = state.crossMyr / (state.fxRate || 3.19);
+        document.getElementById('total-spend-val').textContent = `${fmtInt(state.crossMyr, 'MYR')} (≈ ${fmtMoney(sgdEq, 'SGD')})`;
+        results = calculateCrossCards();
+      } else {
+        for (const cat of ['dining', 'groceries', 'petrol', 'online', 'other']) {
+          document.getElementById(`val-${cat}`).textContent = fmtInt(state.spend[cat], cur);
+        }
+        const total = state.spend.dining + state.spend.groceries + state.spend.petrol + state.spend.online + state.spend.other;
+        document.getElementById('total-spend-val').textContent = fmtInt(total, cur);
+
+        let pool = CARDS.filter(c => c.region === state.mode);
+        if (state.mode === 'my' && state.islamicOnly) {
+          pool = pool.filter(c => c.islamic);
+        }
+        results = pool.map(c => calculateLocalCard(c, state.spend)).sort((a, b) => b.net - a.net);
+      }
+
+      // Winner Banner
+      if (results.length > 0) {
+        const top = results[0];
+        document.getElementById('winner-name').textContent = top.card.name;
+        document.getElementById('winner-sub').textContent = `${top.card.bank} · ${t.effRate}: ${top.effRate.toFixed(2)}%`;
+        document.getElementById('winner-cashback').textContent = fmtMoney(top.net, cur);
+        document.getElementById('winner-yearly').textContent = t.yearlyEst((top.net * 12).toFixed(0), cur);
+      }
+
+      // Render Cards List
+      const listEl = document.getElementById('cards-list');
+      listEl.innerHTML = results.map((r, idx) => {
+        const c = r.card;
+        const link = state.affLinks[c.id] || c.defaultUrl;
+        const tags = (c.tags[state.lang] || []).map(tag =>
+          `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium">${tag}</span>`
+        ).join('');
+
+        let statusBadge = '';
+        if (isCross) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-semibold">${t.fxFeeLabel}: ${r.fxPct.toFixed(2)}%</span>`;
+        } else if (c.minSpend === 0) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[11px] font-semibold">${t.noMin}</span>`;
+        } else if (r.metMin) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[11px] font-semibold">${t.metMin}</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[11px] font-semibold">${t.belowMin(r.needMore.toFixed(0), cur === 'SGD' ? 'S$' : 'RM')}</span>`;
+        }
+
+        const islamicBadge = c.islamic
+          ? `<span class="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[11px] font-semibold">${t.islamicBadge}</span>`
+          : '';
+
+        const netColor = r.net >= 0 ? 'text-teal-700' : 'text-rose-600';
+
+        return `
+          <div class="bg-white rounded-2xl border ${idx === 0 ? 'border-teal-500 ring-1 ring-teal-500/30' : 'border-slate-200'} p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-900 text-white">#${idx + 1}</span>
+                <h4 class="text-sm sm:text-base font-bold text-slate-900">${c.name}</h4>
+                ${islamicBadge}
+                ${statusBadge}
+              </div>
+              <div class="flex flex-wrap gap-1.5">${tags}</div>
+              ${r.capped ? `<div class="text-[11px] font-medium text-amber-700">⚠ ${t.cappedNote}</div>` : ''}
+            </div>
+            <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+              <div class="text-left sm:text-right">
+                <div class="text-lg sm:text-xl font-extrabold tabular-nums ${netColor}">${fmtMoney(r.net, cur)}</div>
+                <div class="text-[11px] text-slate-500">${t.effRate}: ${r.effRate.toFixed(2)}%</div>
+              </div>
+              <a href="${link}" target="_blank" rel="sponsored noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold transition whitespace-nowrap">
+                ${t.applyBtn} →
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderChart(results, cur);
+    }
+
+    function openModal() {
+      const container = document.getElementById('aff-fields');
+      container.innerHTML = CARDS.map(c => `
+        <div class="space-y-1">
+          <label class="block text-xs font-semibold text-slate-700" for="aff-${c.id}">${c.name} (${c.region.toUpperCase()})</label>
+          <input id="aff-${c.id}" data-card-id="${c.id}" type="url" placeholder="${c.defaultUrl}" value="${state.affLinks[c.id] || ''}" class="aff-input w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-600" />
+        </div>
+      `).join('');
+      document.getElementById('aff-modal').classList.remove('hidden');
+      document.getElementById('aff-modal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('aff-modal').classList.add('hidden');
+      document.getElementById('aff-modal').classList.remove('flex');
+    }
+
+    // Event Listeners
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.lang = btn.dataset.lang;
+        render();
+      });
+    });
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.mode = btn.dataset.mode;
+        render();
+      });
+    });
+
+    for (const cat of ['dining', 'groceries', 'petrol', 'online', 'other']) {
+      document.getElementById(`spend-${cat}`).addEventListener('input', e => {
+        state.spend[cat] = Number(e.target.value) || 0;
+        render();
+      });
+    }
+
+    document.getElementById('islamic-only').addEventListener('change', e => {
+      state.islamicOnly = e.target.checked;
+      render();
+    });
+
+    document.getElementById('cross-myr').addEventListener('input', e => {
+      state.crossMyr = Number(e.target.value) || 0;
+      render();
+    });
+
+    document.getElementById('fx-rate').addEventListener('input', e => {
+      const v = Number(e.target.value);
+      if (v > 0) { state.fxRate = v; render(); }
+    });
+
+    document.getElementById('bank-fx-fee').addEventListener('input', e => {
+      const v = Number(e.target.value);
+      if (v >= 0) { state.bankFxFee = v; render(); }
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      state.spend = { dining: 400, groceries: 350, petrol: 200, online: 300, other: 150 };
+      for (const cat of ['dining', 'groceries', 'petrol', 'online', 'other']) {
+        document.getElementById(`spend-${cat}`).value = state.spend[cat];
+      }
+      state.crossMyr = 2000;
+      document.getElementById('cross-myr').value = 2000;
+      state.fxRate = 3.19;
+      document.getElementById('fx-rate').value = 3.19;
+      state.bankFxFee = 3.25;
+      document.getElementById('bank-fx-fee').value = 3.25;
+      state.islamicOnly = false;
+      document.getElementById('islamic-only').checked = false;
+      render();
+    });
+
+    document.getElementById('open-aff-modal').addEventListener('click', openModal);
+    document.getElementById('close-aff-modal').addEventListener('click', closeModal);
+
+    document.getElementById('save-aff-btn').addEventListener('click', () => {
+      document.querySelectorAll('.aff-input').forEach(inp => {
+        const val = inp.value.trim();
+        const id = inp.dataset.cardId;
+        if (val) state.affLinks[id] = val;
+        else delete state.affLinks[id];
+      });
+      saveAffLinks();
+      const toast = document.getElementById('save-toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 1800);
+      render();
+    });
+
+    document.getElementById('export-links-btn').addEventListener('click', () => {
+      const payload = {};
+      CARDS.forEach(c => {
+        payload[c.id] = state.affLinks[c.id] || c.defaultUrl;
+      });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cards_links.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener('load', () => {
+      loadAffLinks();
+      render();
+    });
+  </script>
+</body>
+</html>
